@@ -74,7 +74,10 @@ export const todosPage = () => {
   table.appendChild(tbody);
 
   container.appendChild(btnHome);
-  fetch("http://localhost:4000/todos")
+  fetch("http://localhost:4000/todos", {
+    method: "GET",
+    credentials: "include",
+  })
     .then((response) => response.json())
     .then((data) => {
       data.todos.forEach((todo) => {
