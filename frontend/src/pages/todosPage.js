@@ -1,116 +1,91 @@
-export const todosPage = () => {
+export function todosPage() {
   const container = document.createElement("div");
 
-  container.classList.add(
-    "flex",
-    "flex-col",
-    "items-center",
-    "justify-center",
-    "h-screen",
-    "bg-gray-200"
-  );
+  container.classList.add("container");
+  container.innerHTML = `
+    <div class="flex flex-col items-center justify-center h-screen bg-gray-200">
+      <button id="home-btn" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 mb-4">
+        Home
+      </button>
+      <h1 class="text-3xl font-bold mb-4">List of Todos</h1>
+      <form id="todo-form" class="mb-4 p-4 bg-white shadow-md w-1/2">
+        <input type="text" id="todo-title" placeholder="Enter todo title" class="border p-2 mb-2 w-full" required>
+        <label class="inline-flex items-center">
+          <input type="checkbox" id="todo-completed" class="mr-2"> Completed
+        </label>
+        <button type="submit" class="bg-green-500 text-white p-2 rounded hover:bg-green-600 mt-4">
+          Add Todo
+        </button>
+      </form>
+      <table class="w-1/2 bg-white shadow-md h-[700px] overflow-y-scroll">
+        <thead>
+          <tr>
+            <th class="border px-4 py-2">ID</th>
+            <th class="border px-4 py-2">Title</th>
+            <th class="border px-4 py-2">Completed</th>
+            <th class="border px-4 py-2">Owner Id</th>
+          </tr>
+        </thead>
+        <tbody id="todo-list" class="text-center"></tbody>
+      </table>
+    </div>
+  `;
 
-  const btnHome = document.createElement("button");
+  const homeBtn = container.querySelector("#home-btn");
+  const todoForm = container.querySelector("#todo-form");
+  const tbody = container.querySelector("#todo-list");
 
-  btnHome.classList.add(
-    "bg-blue-500",
-    "text-white",
-    "p-2",
-    "rounded",
-    "hover:bg-blue-600",
-    "mb-4"
-  );
-
-  btnHome.textContent = "Home";
-
-  btnHome.addEventListener("click", () => {
+  homeBtn.addEventListener("click", () => {
     window.location.pathname = "/home";
   });
 
-  const title = document.createElement("h1");
+  todoForm.addEventListener("submit", (e) => {
+    e.preventDefault();
 
-  title.classList.add("text-3xl", "font-bold", "mb-4");
-  title.textContent = "List of Todos";
+    const title = container.querySelector("#todo-title").value;
+    const completed = container.querySelector("#todo-completed").checked;
 
-  const table = document.createElement("table");
+    //* POST REQUEST
+    fetch("http://localhost:4000/todos/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ title: "Atitle", completed: false }),
+    })
+      .then((response) => response.json())
+      .then(() => {
+        alert("Todo added successfully");
+        todoForm.reset();
+        loadTodos();
+      })
+      .catch((error) => console.error("Error in fetch to add:", error));
+  });
 
-  table.classList.add(
-    "w-1/2",
-    "bg-white",
-    "shadow-md",
-    "h-[700px]",
-    "overflow-y-scroll"
-  );
-
-  const thead = document.createElement("thead");
-  const tr = document.createElement("tr");
-  const th1 = document.createElement("th");
-  th1.classList.add("border", "px-4", "py-2");
-  th1.textContent = "ID";
-
-  const th2 = document.createElement("th");
-  th2.classList.add("border", "px-4", "py-2");
-  th2.textContent = "Title";
-
-  const th3 = document.createElement("th");
-  th3.classList.add("border", "px-4", "py-2");
-  th3.textContent = "Completed";
-
-  const th4 = document.createElement("th");
-  th4.classList.add("border", "px-4", "py-2");
-  th4.textContent = "Owner Id";
-
-  tr.appendChild(th1);
-  tr.appendChild(th2);
-  tr.appendChild(th3);
-  tr.appendChild(th4);
-
-  thead.appendChild(tr);
-
-  const tbody = document.createElement("tbody");
-
-  tbody.classList.add("text-center");
-  table.appendChild(thead);
-  table.appendChild(tbody);
-
-  container.appendChild(btnHome);
-  fetch("http://localhost:4000/todos", {
-    method: "GET",
-    credentials: "include",
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      data.todos.forEach((todo) => {
-        if (todo.id > 10) return;
-
-        const tr = document.createElement("tr");
-
-        const td1 = document.createElement("td");
-        td1.classList.add("border", "px-4", "py-2");
-        td1.textContent = todo.id;
-
-        const td2 = document.createElement("td");
-        td2.classList.add("border", "px-4", "py-2");
-        td2.textContent = todo.title;
-
-        const td3 = document.createElement("td");
-        td3.classList.add("border", "px-4", "py-2");
-        td3.textContent = todo.completed ? "Sí" : "No";
-
-        const td4 = document.createElement("td");
-        td4.classList.add("border", "px-4", "py-2");
-        td4.textContent = todo.owner;
-
-        tr.appendChild(td1);
-        tr.appendChild(td2);
-        tr.appendChild(td3);
-        tr.appendChild(td4);
-        tbody.appendChild(tr);
+  //* LOAD TODOS FUNCTION
+  const loadTodos = () => {
+    tbody.innerHTML = "";
+    fetch("http://localhost:4000/todos", {
+      method: "GET",
+      credentials: "include",
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        data.todos.forEach((todo) => {
+          const row = `
+            <tr>
+              <td class="border px-4 py-2">${todo.id}</td>
+              <td class="border px-4 py-2">${todo.title}</td>
+              <td class="border px-4 py-2">${todo.completed ? "Yes" : "No"}</td>
+              <td class="border px-4 py-2">${todo.owner}</td>
+            </tr>
+          `;
+          tbody.insertAdjacentHTML("beforeend", row);
+        });
       });
-    });
+  };
 
-  container.appendChild(title);
-  container.appendChild(table);
+  loadTodos();
 
   return container;
-};
+}
