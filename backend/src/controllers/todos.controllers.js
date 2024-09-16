@@ -13,7 +13,7 @@ export const getAllTodosCtrl = (req, res) => {
 
 export const addTodo = (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: "No autorizado" });
+    return res.status(401).json({ message: "No autorizado jajaja" });
   }
 
   const { title, completed } = req.body;
